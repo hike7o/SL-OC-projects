@@ -2640,6 +2640,8 @@
 2357,25364,2016,NonResidential,Self-Storage Facility,Seattle Self Storage,Greater Duwamish,1.0,2.0,28800,Self-Storage Facility,,,1143826.625,29.44,,47.59291,-122.31042,1100 Poplar Place S,Seattle,WA,98144,60,28800.0,14400.0,1.0,0.0
 2385,25371,2015,NonResidential,K-12 School,Epiphany School,Central,1.0,2.0,28500,K-12 School,,90.0,1136111.0,27.69,, 47.61786926, -122.2864926, 3615 E Denny Way, Seattle, WA,98122,6,28500.0,14250.0,1.0,0.0
 2359,25371,2016,NonResidential,K-12 School,Epiphany School,Central,4.0,2.0,28500,K-12 School,,92.0,1162561.125,28.64,,47.61791,-122.28594,1802 36Th Ave,Seattle,WA,98122,7,7125.0,14250.0,1.0,0.0
+2406,25451,2015,NonResidential,"Restaurant
+",Yale Street Landing,Lake Union,1.0,2.0,26519,Restaurant,,,,,, 47.62918016, -122.3316949, 1001 Fairview Ave N, Seattle, WA,98109,37,26519.0,13259.5,1.0,0.0
 2379,25451,2016,NonResidential,Restaurant,Yale Street Landing  And Ocean Alexander,Lake Union,1.0,2.0,26519,Restaurant,,,3717064.0,97.27,,47.62902,-122.33173,1001 Fairview Ave N,Seattle,WA,98109,38,26519.0,13259.5,1.0,0.0
 2407,25452,2015,NonResidential,Mixed Use Property,Chandlers Cove,Lake Union,1.0,2.0,34639,Restaurant,,,13871876.0,473.57,, 47.62782862, -122.33316, 901 Fairview Ave N, Seattle, WA,98109,27,34639.0,17319.5,0.5553566788879587,0.44464332111204136
 2380,25452,2016,NonResidential,Mixed Use Property,Chandler'S Cove - Sedo,Lake Union,1.0,2.0,34639,Restaurant,,,15480681.0,515.71,,47.62774,-122.33384,901 Fairview Ave. N.,Seattle,WA,98109,28,34639.0,17319.5,0.5553566788879587,0.44464332111204136
