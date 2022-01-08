@@ -85,14 +85,44 @@ warnings.filterwarnings('ignore')
 # -- List of functions
 # --------------------------------------------------------------------
 
+# --------------------------------------------------------------------
+# -- Function 1 
+# --------------------------------------------------------------------
+
+def preprocess(text):
+    '''
+    Clean text (tokenize, lower case, punctuation,
+    stopwords, non alphabetic, lemmatize)
+    
+    '''
+    words = wordpunct_tokenize(text)
+    words = [w.lower() for w in words]
+    words = [w.translate(table) for w in words]
+    words = [w for w in words if w.isalpha()]
+    words = [w for w in words if not w in stop_words]
+    words = [WordNetLemmatizer().lemmatize(w) for w in words]
+    return (' '.join(words))
+
 
 # --------------------------------------------------------------------
 # -- Function 1 
 # --------------------------------------------------------------------
+
 def tsne_visualisation(data, title):
     
     plt.figure(figsize=[8, 6])
-    sns.scatterplot(x=0, y=1, hue='Category', data=data, sizes=2)
+    sns.scatterplot(x=0, y=1,
+                    hue='Category',
+                    data=data,
+                    sizes=2)
+    data1 = data.groupby('Category').mean()
+    sns.scatterplot(x=0, y=1,
+                    data=data1,
+                    # hue='Category',
+                    marker='*',
+                    s=400,
+                    color='k',
+                    legend=False)
     plt.title(title, fontsize=12, weight='bold')
     plt.legend(bbox_to_anchor=(1, 1))
     plt.xlabel('t-SNE1', size=14)
@@ -177,9 +207,17 @@ def pca_visualization(dataframe,
     # First 2 components visualisation
     plt.figure(figsize=[25, 15])
 
-    sns.set_palette('tab10')
+    # sns.set_palette('tab10')
     sns.scatterplot(x='PC1', y='PC2', data=dataframe_work, hue='Category',
                     s=100, alpha=1)
+    data1 = dataframe_work.groupby('Category').mean()
+    sns.scatterplot(x='PC1', y='PC2',
+                    data=data1,
+                    # hue='Category',
+                    marker='*',
+                    s=400,
+                    color='k',
+                    legend=False)
     plt.title(title, fontsize=40)
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=34)
     plt.xlabel(x_label, fontsize=34)
@@ -205,122 +243,16 @@ def display_scree_plot(pca):
     plt.show(block=False)
 
 # --------------------------------------------------------------------
-# -- Function 5 
+# -- Function 5
 # --------------------------------------------------------------------
-
-def display_circles(pcs, n_comp, pca, axis_ranks, labels=None, label_rotation=0, lims=None):
-    for d1, d2 in axis_ranks: # 3 first factorial plans displayed i.e the first 6 componants
-        if d2 < n_comp:
-
-            # plot initialisation 
-            fig, ax = plt.subplots(figsize=(7,6))
-
-            # Limits of the plot fixed
-            if lims is not None :
-                xmin, xmax, ymin, ymax = lims
-            elif pcs.shape[1] < 30 :
-                xmin, xmax, ymin, ymax = -1, 1, -1, 1
-            else :
-                xmin, xmax, ymin, ymax = min(pcs[d1,:]), max(pcs[d1,:]), min(pcs[d2,:]), max(pcs[d2,:])
-
-            # Arrows display
-            # If more than 30 arrows, triangle not displayed
-            if pcs.shape[1] < 30 :
-                plt.quiver(np.zeros(pcs.shape[1]), np.zeros(pcs.shape[1]),
-                   pcs[d1,:], pcs[d2,:], 
-                   angles='xy', scale_units='xy', scale=1, color="grey")
-                # (voir la doc : https://matplotlib.org/api/_as_gen/matplotlib.pyplot.quiver.html)
-            else:
-                lines = [[[0,0],[x,y]] for x,y in pcs[[d1,d2]].T]
-                ax.add_collection(LineCollection(lines, axes=ax, alpha=.1, color='black'))
-            
-            # Variable names displayed  
-            if labels is not None:  
-                for i,(x, y) in enumerate(pcs[[d1,d2]].T):
-                    if x >= xmin and x <= xmax and y >= ymin and y <= ymax :
-                        plt.text(x, y, labels[i], fontsize='14', ha='center', va='center', rotation=label_rotation, color="blue", alpha=0.5)
-            
-            # Circle display
-            circle = plt.Circle((0,0), 1, facecolor='none', edgecolor='b')
-            plt.gca().add_artist(circle)
-
-            # Plot limits definition
-            plt.xlim(xmin, xmax)
-            plt.ylim(ymin, ymax)
         
-            # Horizontal and vertical lines display
-            plt.plot([-1, 1], [0, 0], color='grey', ls='--')
-            plt.plot([0, 0], [-1, 1], color='grey', ls='--')
-
-            # nom des axes, avec le pourcentage d'inertie expliqué
-            plt.xlabel('F{} ({}%)'.format(d1+1, round(100*pca.explained_variance_ratio_[d1],1)))
-            plt.ylabel('F{} ({}%)'.format(d2+1, round(100*pca.explained_variance_ratio_[d2],1)))
-
-            plt.title("PCA Correlation circle (F{} & F{})".format(d1+1, d2+1))
-            plt.show(block=False)
+def display_topics(model, feature_names, no_top_words):
+    for topic_idx, topic in enumerate(model.components_):
+        print("Topic {}:".format(topic_idx))
+        print(" ".join([feature_names[i] for i in topic.argsort()[:-no_top_words - 1:-1]]))  
 
 # --------------------------------------------------------------------
 # -- Function 6
-# --------------------------------------------------------------------
-
-def affiche_correlation_circle(pcs, pca, labels, axis_ranks=[(0, 1)],
-                               long=6, larg=6):
-    ''' Affiche les graphiques de cercle de corrélation de l'ACP pour les
-        différents plans factoriels.
-        Parameters
-        ----------------
-        pcs : PCA composants, obligatoire.
-        labels : nom des différentes composantes, obligatoire.
-        axis_ranks : liste de tuple de plan factoriel (0, 1) par défaut.
-        long : longueur de la figure, facultatif (8 par défaut).
-        larg : largeur de la figure, facultatif (8 par défaut).
-        Returns
-        ---------------
-        None
-    '''
-    for i, (d1, d2) in enumerate(axis_ranks):
-
-        fig, axes = plt.subplots(figsize=(long, larg))
-
-        for i, (x_value, y_value) in enumerate(zip(pcs[d1, :], pcs[d2, :])):
-            if(x_value > 0.2 or y_value > 0.2):
-                plt.plot([0, x_value], [0, y_value], color='k')
-                plt.text(x_value, y_value, labels[i], fontsize='14')
-
-        circle = plt.Circle((0, 0), 1, facecolor='none', edgecolor='k')
-        axes.set_aspect(1)
-        axes.add_artist(circle)
-
-        plt.plot([-1, 1], [0, 0], color='grey', ls='--')
-        plt.plot([0, 0], [-1, 1], color='grey', ls='--')
-
-        plt.xlim([-1, 1])
-        plt.ylim([-1, 1])
-
-        # nom des axes, avec le pourcentage d'inertie expliqué
-        axes.set_xlabel(
-            'PC{} ({}%)'.format(
-                d1 +
-                1,
-                round(
-                    100 *
-                    pca.explained_variance_ratio_[d1],
-                    1)),
-            fontsize=16)
-        axes.set_ylabel(
-            'PC{} ({}%)'.format(
-                d2 +
-                1,
-                round(
-                    100 *
-                    pca.explained_variance_ratio_[d2],
-                    1)),
-            fontsize=16)
-        axes.set_title('PCA correlation circle (PC{} and PC{})'.format(
-            d1 + 1, d2 + 1), fontsize=18)
-
-# --------------------------------------------------------------------
-# -- Function 7
 # --------------------------------------------------------------------
 
 def threed_pca(data):
@@ -333,16 +265,16 @@ def threed_pca(data):
     fig.update_traces(marker=dict(size=4,
                                   line=dict(width=2,
                                             color='DarkSlateGrey'),
-                                  colorscale='viridis'),
+                                  colorscale='Viridis'),
                       selector=dict(mode='markers'))
     
     return fig
     
 # --------------------------------------------------------------------
-# -- Function 9
+# -- Function 7
 # --------------------------------------------------------------------
 
-def display_clusters(X_projected, cluster_labels, centres_reduced, title):
+def display_clusters_pca(X_projected, cluster_labels, centres_reduced, title):
     '''
     Display clusters visualization on scatterplot.
     
@@ -358,8 +290,9 @@ def display_clusters(X_projected, cluster_labels, centres_reduced, title):
     
     sns.scatterplot(centres_reduced[:, 0],
                     centres_reduced[:, 1],
-                    marker='x',
-                    s=150,
+                    #hue='cluster',
+                    marker='*',
+                    s=400,
                     linewidths=3,
                     color='k',
                     zorder=20)
@@ -372,19 +305,56 @@ def display_clusters(X_projected, cluster_labels, centres_reduced, title):
     plt.ylabel("PC2", weight='bold', size=14)
     plt.grid(True)
     plt.show()
+
     
 # --------------------------------------------------------------------
-# -- Function 10
+# -- Function 8
+# --------------------------------------------------------------------
+
+def display_clusters_tsne(X_projected, cluster_labels, centres_reduced, title):
+    '''
+    Display clusters visualization on scatterplot.
+    
+    '''
+    plt.figure(figsize=[12, 8])
+
+    sns.scatterplot(X_projected[:, 0],
+                    X_projected[:, 1],
+                    hue=cluster_labels,
+                    s=70,
+                    alpha=1,
+                    palette='tab10')
+    
+    sns.scatterplot(centres_reduced[:, 0],
+                    centres_reduced[:, 1],
+                    #hue='cluster',
+                    marker='*',
+                    s=400,
+                    linewidths=3,
+                    color='k',
+                    zorder=20)
+    
+    plt.title(title, fontsize=20)
+    plt.legend(fontsize=15) #bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., )
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.xlabel("t-SNE1", weight='bold', size=14)
+    plt.ylabel("t-SNE2", weight='bold', size=14)
+    plt.grid(True)
+    plt.show()
+    
+# --------------------------------------------------------------------
+# -- Function 9
 # --------------------------------------------------------------------
 
 def threed_clustering(data):
 
     fig = px.scatter_3d(data,
-                        x='0',
-                        y='1',
-                        z='2',
-                        color='cluster',
-                        labels={'x':'0', 'y':'1', 'z': '2'})
+                        x=0,
+                        y=1,
+                        z=2,
+                        color='cluster') #,
+                        #labels={'x':'0', 'y':'1', 'z': '2'})
     fig.update_traces(marker=dict(size=4,
                                   line=dict(width=2,
                                             color='DarkSlateGrey'),
@@ -394,7 +364,7 @@ def threed_clustering(data):
     return fig
 
 # --------------------------------------------------------------------
-# -- Function 11 
+# -- Function 10
 # --------------------------------------------------------------------
 
 def metrics_clusters(dataframe, data_type):
@@ -421,7 +391,7 @@ def metrics_clusters(dataframe, data_type):
     return results
 
 # --------------------------------------------------------------------
-# -- Function 12 
+# -- Function 11
 # --------------------------------------------------------------------
 
 def metrics_clusters_lda(dataframe, data_type):
@@ -449,14 +419,14 @@ def metrics_clusters_lda(dataframe, data_type):
     return results
 
 # --------------------------------------------------------------------
-# -- Function 13
+# -- Function 12
 # --------------------------------------------------------------------
 
 def cluster_distribution(data):
 
     fig = plt.figure(figsize=(8, 6))
     ax = sns.countplot(y=data['cluster'],
-                   palette='viridis_r')
+                   palette='bright')
     plt.title('Distribution of products per cluster', weight='bold', size=14)
     plt.ylabel('Cluster')
     plt.xlabel('Count', weight='bold', size=12) 
@@ -466,10 +436,10 @@ def cluster_distribution(data):
     plt.show()
 
 # --------------------------------------------------------------------
-# -- Function 14
+# -- Function 13
 # --------------------------------------------------------------------
 def top_words_display(model, feature_names, n_top_words, title):
-    fig, axes = plt.subplots(2, 4, figsize=(20, 12), sharex=True)
+    fig, axes = plt.subplots(2, 4, figsize=(16, 6), sharex=True)
     axes = axes.flatten()
     for topic_idx, topic in enumerate(model.components_):
         top_features_idx = topic.argsort()[:-n_top_words - 1:-1]
@@ -484,12 +454,12 @@ def top_words_display(model, feature_names, n_top_words, title):
         ax.tick_params(axis='both', which='major', labelsize=20)
         for i in 'top right left'.split():
             ax.spines[i].set_visible(False)
-        fig.suptitle(title, fontsize=20, weight='bold')
+        fig.suptitle(title, fontsize=16, weight='bold')
 
     plt.show()
 
 # --------------------------------------------------------------------
-# -- Function 15 
+# -- Function 14 
 # --------------------------------------------------------------------
 
 def plot_clusters(data, algorithm, args, kwds):
@@ -508,7 +478,7 @@ def plot_clusters(data, algorithm, args, kwds):
              format(end_time - start_time), fontsize=14)
 
 # --------------------------------------------------------------------
-# -- Function 17
+# -- Function 15
 # --------------------------------------------------------------------
 
 def cluster_optimal(data):
@@ -543,7 +513,7 @@ def cluster_optimal(data):
                "slcl": slcl}
 
 # --------------------------------------------------------------------
-# -- Function 18
+# -- Function 16
 # --------------------------------------------------------------------   
     
 def cluster_selection(range_n_clusters, metrics):
@@ -584,5 +554,4 @@ def cluster_selection(range_n_clusters, metrics):
 
     plt.show()
     
- 
-    
+# ____________________________________________________________________________________________
