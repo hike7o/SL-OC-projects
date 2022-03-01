@@ -15,13 +15,11 @@ import shap
 import json
 pd.set_option('display.max_colwidth', -1)
 
-data_test = pd.read_pickle("test_data_boruta100.pkl")
-model_fname = 'final_model.pkl'
-best_model = joblib.load(model_fname)
-shap_values = joblib.load('shap_values.pkl')
-application_test = pd.read_pickle('application_test.pickle')
-df_customer_info = pd.read_pickle("df_customer_info.pkl")
-df_customer_loan = pd.read_pickle("df_customer_loan.pkl")
+data_test = pd.read_pickle("data/data_test_ltd.pkl")
+shap_values = joblib.load('data/shap_values_ltd.pkl')
+file_exp_value = 'data/exp_value.pkl'
+with open(file_exp_value, 'rb') as exp_value:
+            exp_value = pickle.load(exp_value) 
 
 # ====================================================================
 # HEADER - TITRE
@@ -242,7 +240,6 @@ def main():
 
     shap_data_customer = get_shap_data(customer_id)
     
-    
     # Credit score Gauge plot ==========================================
     
     fig_jauge = go.Figure(go.Indicator(
@@ -338,17 +335,6 @@ def main():
     # INTERPRETABILITY : SHAP VALUES
     # --------------------------------------------------------------------
     
- 
-    
-    def get_index_cust(customer_id):
-        
-        test_set = data_test.reset_index(drop=True)
-        index_cust = test_set[test_set['SK_ID_CURR'] == customer_id].index.item()
-        
-        return index_cust
-    
-    index_cust = get_index_cust(customer_id)
-    
     def get_features_importance():
         ''' Display features importance
         '''
@@ -376,14 +362,10 @@ def main():
                                   expanded=True):
                     
     
-                    explainer = shap.TreeExplainer(best_model)
                     test_set = data_test.reset_index(drop=True)
                     customer_index = test_set[test_set['SK_ID_CURR'] == customer_id].index.item()
                     X_set = test_set.set_index('SK_ID_CURR')
                     X_test_selected = X_set.iloc[customer_index]
-                    X_test_selected_array = X_test_selected.values.reshape(1, -1)
-
-                    shap_values_selected = explainer.shap_values(X_test_selected_array)
 
                     col1, col2 = st.columns([1, 1])
                     # Graphical display of SHAP features interpretability for the selected customer
@@ -391,9 +373,9 @@ def main():
 
                         plt.clf()
 
-#                         # BarPlot selected customer
+                        # BarPlot selected customer
                         shap.plots.bar(shap_values[customer_index], max_display=40)
-#                        shap.plots.bar(get_shap_data(customer_id), max_display=30)
+
 
                         fig = plt.gcf()
                         fig.set_size_inches((10, 20))
@@ -405,7 +387,7 @@ def main():
                         plt.clf()
 
                         # Décision Plot
-                        shap.decision_plot(explainer.expected_value[1], shap_values_selected[1],
+                        shap.decision_plot(exp_value, np.array(shap_data_customer['1']),
                                            X_test_selected)
 
                         fig = plt.gcf()
@@ -415,10 +397,7 @@ def main():
 
     st.sidebar.subheader('Features importance')
     get_features_importance()
-
-    
-    
-    
+  
     
 if __name__ == '__main__':
     main()
