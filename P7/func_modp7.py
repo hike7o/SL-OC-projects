@@ -34,8 +34,6 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.impute import SimpleImputer
 
 # Models
-import pycaret
-from pycaret.classification import *
 import lightgbm as lgb
 from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
@@ -46,11 +44,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.feature_selection import RFECV
 from xgboost import XGBClassifier
 from sklearn.tree import DecisionTreeClassifier
-# Optimisation bayésienne
-from bayes_opt import BayesianOptimization
-from skopt import BayesSearchCV
-from skopt.callbacks import DeadlineStopper, VerboseCallback
-from skopt.space import Real, Categorical, Integer
 
 # Optimisation optuna
 import optuna
@@ -204,6 +197,8 @@ def display_confusion_matrix(y_true, y_pred, title):
     labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in zip(group_names,group_counts,group_percentages)]
     labels = np.asarray(labels).reshape(2,2)
     sns.heatmap(cf_matrix, annot=labels, annot_kws={"size":20}, fmt="", cmap='Blues')
+    plt.xlabel("Predicted class", weight='bold', size=14)
+    plt.ylabel("Actual class", weight='bold', size=14)
     plt.title(f'Confusion Matrix: {title}', weight='bold', size=16)
     plt.show()
     
@@ -280,7 +275,7 @@ def NPV(model, y_true, X_true):
 # -- Function 9 
 # --------------------------------------------------------------------
 
-def custom_score(y_true, y_pred, tn_value=1, fp_value=-1, fn_value=-10, tp_value=0):
+def custom_score(y_true, y_pred, tn_value=1, fp_value=0, fn_value=-10, tp_value=0):
     '''
     Custom score penalizing False negatives.
     Parameters
@@ -293,7 +288,7 @@ def custom_score(y_true, y_pred, tn_value=1, fp_value=-1, fn_value=-10, tp_value
                Bank will lose the interests (Type I error)(default value=0),
                To penalize
     fn_value : False negative, loan is granted to a defaulter
-               Bank will lose lots of monet (Type II error)(default value=*10)
+               Bank will lose lots of money (Type II error)(default value=-10)
                To penalize,
     tp_value : True positive, loan is refused as the customer is a defaulter optionnel (default value=1),
                Neutral for the bank, money not lost but not gained either

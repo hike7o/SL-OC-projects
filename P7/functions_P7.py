@@ -24,10 +24,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 # static, animated, and interactive visualizations in Python
 
-#for 100% jupyter notebook cell width
-from IPython.core.display import display, HTML
-display(HTML("<style>.container { width:100% !important; }</style>"))
-
 palette = sns.color_palette("bright", 10)
 plot_kwds = {'alpha' : 1, 's' : 60, 'linewidths':0}
 warnings.filterwarnings('ignore')
